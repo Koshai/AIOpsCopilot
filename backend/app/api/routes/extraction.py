@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.db.deps import get_db
 from app.retrieval.vector_search import VectorSearchService
+from app.extraction.schema_registry import SchemaRegistry
 from app.services.extraction_service import ExtractionService
 
 router = APIRouter()
@@ -11,6 +12,7 @@ router = APIRouter()
 
 class ExtractionRequest(BaseModel):
     question: str
+    workflow_type: str = "invoice"
 
 
 @router.post("/extract/invoice")
@@ -29,8 +31,12 @@ async def extract_invoice(
         [chunk.chunk_text for chunk in chunks]
     )
 
-    result = ExtractionService.extract_invoice_data(
-        context=context
+    SchemaRegistry.get(request.workflow_type)
+
+    result = ExtractionService.extract(
+        context=context,
+        question=request.question,
+        workflow_type=request.workflow_type,
     )
 
     return result

@@ -1,12 +1,12 @@
 from langgraph.types import interrupt
 
-from app.graphs.invoice_state import (
-    InvoiceWorkflowState
+from app.graphs.workflow_state import (
+    WorkflowState
 )
 
 
 def human_review_node(
-    state: InvoiceWorkflowState
+    state: WorkflowState
 ):
 
     extraction = state["extraction"]

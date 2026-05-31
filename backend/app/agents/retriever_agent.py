@@ -1,5 +1,8 @@
 from sqlalchemy.orm import Session
 
+from typing import Optional
+
+from app.retrieval.filtering import MetadataFilterService
 from app.retrieval.hybrid_search import (
     HybridSearchService
 )
@@ -14,7 +17,8 @@ class RetrieverAgent:
     @staticmethod
     def retrieve(
         db: Session,
-        query: str
+        query: str,
+        document_id: Optional[int] = None,
     ):
 
         chunks = (
@@ -23,6 +27,12 @@ class RetrieverAgent:
                 query=query
             )
         )
+
+        if document_id is not None:
+            chunks = MetadataFilterService.filter_by_document(
+                chunks,
+                document_id,
+            )
 
         reranked = (
             RerankerService.rerank(

@@ -1,6 +1,6 @@
 from langgraph.graph import StateGraph, END
 
-from app.graphs.invoice_state import InvoiceWorkflowState
+from app.graphs.workflow_state import WorkflowState
 
 from app.graphs.retrieve_node import retrieve_node
 from app.graphs.extract_node import extract_node
@@ -11,9 +11,9 @@ from app.graphs.router import validation_router
 from app.checkpointing.checkpointer import checkpointer
 
 
-def build_invoice_graph(db):
+def build_workflow_graph(db):
 
-    workflow = StateGraph(InvoiceWorkflowState)
+    workflow = StateGraph(WorkflowState)
 
     workflow.add_node(
         "retrieve",

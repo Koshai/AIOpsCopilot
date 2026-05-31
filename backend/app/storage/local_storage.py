@@ -22,4 +22,4 @@ class LocalStorage:
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        return str(file_path)
+        return str(file_path.resolve())

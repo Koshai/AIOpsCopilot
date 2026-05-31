@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
 
+    # When true, PDF ingestion runs in-process (no Celery worker required).
+    INGESTION_SYNC: bool = False
+
     OPENAI_API_KEY: str = ""
 
     DATABASE_URL: str

@@ -1,26 +1,18 @@
-from app.graphs.invoice_state import InvoiceWorkflowState
-from app.services.normalizer_service import NormalizerService
+from app.extraction.schema_registry import DEFAULT_WORKFLOW_TYPE
+from app.extraction.validation import ExtractionValidationService
+from app.graphs.workflow_state import WorkflowState
 
 
-def validate_node(state: InvoiceWorkflowState):
-
+def validate_node(state: WorkflowState):
     extraction = state["extraction"]
+    workflow_type = state.get("workflow_type", DEFAULT_WORKFLOW_TYPE)
 
-    extraction.currency = (
-        NormalizerService.normalize_currency(
-            extraction.currency
-        )
+    extraction, valid = ExtractionValidationService.validate(
+        extraction,
+        workflow_type=workflow_type,
     )
-
-    valid = True
-
-    if extraction.total_amount <= 0:
-        valid = False
-
-    if not extraction.vendor_name:
-        valid = False
 
     return {
         "validation_passed": valid,
-        "extraction": extraction
+        "extraction": extraction,
     }

@@ -1,0 +1,28 @@
+version: '3.9'
+
+# Local dev infrastructure (host ports chosen to avoid Windows defaults)
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: ai_ops_postgres
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ai_ops
+
+    ports:
+      - "5451:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: ai_ops_redis
+
+    ports:
+      - "6381:6379"
+
+volumes:
+  postgres_data:

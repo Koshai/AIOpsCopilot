@@ -4,8 +4,8 @@ from app.checkpointing.checkpointer import (
     checkpointer
 )
 
-from app.graphs.invoice_state import (
-    InvoiceWorkflowState
+from app.graphs.workflow_state import (
+    WorkflowState
 )
 
 from app.graphs.planner_node import (
@@ -41,10 +41,10 @@ from app.graphs.review_router import (
 )
 
 
-def build_multi_agent_graph(db):
+def build_multi_agent_workflow_graph(db):
 
     workflow = StateGraph(
-        InvoiceWorkflowState
+        WorkflowState
     )
 
     # Planner Agent

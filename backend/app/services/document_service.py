@@ -1,6 +1,7 @@
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.ingestion.pipeline import IngestionPipeline
 from app.repositories.document_repository import DocumentRepository
 from app.storage.local_storage import LocalStorage
@@ -36,10 +37,17 @@ class DocumentService:
 
         if file.content_type == "application/pdf":
 
-            process_pdf_task.delay(
-                document_id=document.id,
-                file_path=saved_path
-            )
+            if settings.INGESTION_SYNC:
+                IngestionPipeline.process_pdf(
+                    db=db,
+                    document_id=document.id,
+                    file_path=saved_path,
+                )
+            else:
+                process_pdf_task.delay(
+                    document_id=document.id,
+                    file_path=saved_path,
+                )
         elif file.content_type.startswith("image/"):
 
             documents = OCRIngestionService.process_image(

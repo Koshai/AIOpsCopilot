@@ -1,19 +1,15 @@
 from sqlalchemy.orm import Session
 
-from app.graphs.invoice_state import InvoiceWorkflowState
-from app.retrieval.vector_search import VectorSearchService
+from app.graphs.workflow_state import WorkflowState
+from app.agents.retriever_agent import RetrieverAgent
 
 
-def retrieve_node(state: InvoiceWorkflowState, db: Session):
+def retrieve_node(state: WorkflowState, db: Session):
 
-    chunks = VectorSearchService.search_similar_chunks(
+    context = RetrieverAgent.retrieve(
         db=db,
         query=state["question"],
-        limit=10
-    )
-
-    context = "\n\n".join(
-        [chunk.chunk_text for chunk in chunks]
+        document_id=state.get("document_id"),
     )
 
     return {

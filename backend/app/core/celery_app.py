@@ -16,7 +16,7 @@ celery_app = Celery(
 celery_app.conf.task_queues = (Queue("ai_pipeline"),)
 celery_app.conf.task_default_queue = "ai_pipeline"
 celery_app.conf.task_routes = {
-    "app.tasks.*": {"queue": "ai_pipeline"},
+    "app.tasks.ingestion_tasks.*": {"queue": "ai_pipeline"},
 }
 
 # Prefork/spawn pools use billiard semaphores that fail on Windows (WinError 5).
