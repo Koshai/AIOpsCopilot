@@ -1,19 +1,19 @@
-from app.graphs.workflow_state import WorkflowState
-
 from app.agents.verifier_agent import VerifierAgent
+from app.graphs.workflow_state import WorkflowState
+from app.websocket.events import WorkflowEvents
 
-from app.websocket.events import (
-    WorkflowEvents
-)
 
 def verifier_node(state: WorkflowState):
-
-    WorkflowEvents.emit_from_sync(
-        "Verifier agent validating extraction..."
+    WorkflowEvents.node_started(
+        "verifier",
+        "Verifier agent validating extraction...",
     )
 
-    passed = VerifierAgent.verify(
-        state["extraction"]
+    passed = VerifierAgent.verify(state["extraction"])
+
+    WorkflowEvents.node_completed(
+        "verifier",
+        "Verification passed" if passed else "Verification failed",
     )
 
     return {

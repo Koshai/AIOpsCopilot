@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.db.deps import get_db
 from app.schemas.document import DocumentResponse
 from app.services.document_service import DocumentService
+from app.services.document_query_service import DocumentQueryService
 
 router = APIRouter()
 
@@ -21,4 +22,5 @@ async def upload_file(
         file=file
     )
 
-    return result["document"]
+    db.refresh(result["document"])
+    return DocumentQueryService.to_response(db, result["document"])

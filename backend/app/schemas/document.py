@@ -1,10 +1,16 @@
-from pydantic import BaseModel
+from datetime import datetime
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict
+
+DocumentProcessingStatus = Literal["pending", "indexed"]
 
 
 class DocumentResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     filename: str
     file_type: str
-
-    class Config:
-        from_attributes = True
+    created_at: datetime
+    processing_status: DocumentProcessingStatus

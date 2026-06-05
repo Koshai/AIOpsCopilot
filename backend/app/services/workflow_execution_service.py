@@ -12,6 +12,8 @@ from app.repositories.workflow_execution_repository import (
     WorkflowExecutionRepository,
 )
 from app.schemas.workflow_execution import WorkflowExecutionResponse
+from app.websocket.context import current_thread_id
+from app.websocket.events import WorkflowEvents
 
 
 class WorkflowExecutionService:
@@ -53,6 +55,13 @@ class WorkflowExecutionService:
             document_id=document_id,
         )
 
+        WorkflowEvents.workflow_started(
+            thread_id=thread_id,
+            workflow_type=workflow_type,
+        )
+
+        thread_token = current_thread_id.set(thread_id)
+
         with Timer() as timer:
             try:
                 result = traced_workflow(
@@ -70,7 +79,13 @@ class WorkflowExecutionService:
                     thread_id=thread_id,
                     execution_time=timer.duration,
                 )
+                WorkflowEvents.workflow_completed(
+                    thread_id=thread_id,
+                    status=WorkflowExecutionStatus.FAILED,
+                )
                 raise
+            finally:
+                current_thread_id.reset(thread_token)
 
         execution = WorkflowExecutionService.complete_from_result(
             db,
@@ -79,6 +94,9 @@ class WorkflowExecutionService:
             execution_time=timer.duration,
             supports_human_review=supports_human_review,
         )
+
+        if execution is not None:
+            WorkflowExecutionService._emit_terminal_event(execution)
 
         return result, execution
 
@@ -93,6 +111,8 @@ class WorkflowExecutionService:
     ) -> Tuple[Dict[str, Any], Optional[WorkflowExecution]]:
         execution = WorkflowExecutionRepository.get_by_thread_id(db, thread_id)
         prior_time = execution.execution_time if execution else 0.0
+
+        thread_token = current_thread_id.set(thread_id)
 
         with Timer() as timer:
             try:
@@ -110,7 +130,13 @@ class WorkflowExecutionService:
                     thread_id=thread_id,
                     execution_time=(prior_time or 0.0) + timer.duration,
                 )
+                WorkflowEvents.workflow_completed(
+                    thread_id=thread_id,
+                    status=WorkflowExecutionStatus.FAILED,
+                )
                 raise
+            finally:
+                current_thread_id.reset(thread_token)
 
         updated = WorkflowExecutionService.complete_from_result(
             db,
@@ -119,6 +145,9 @@ class WorkflowExecutionService:
             execution_time=(prior_time or 0.0) + timer.duration,
             supports_human_review=supports_human_review,
         )
+
+        if updated is not None:
+            WorkflowExecutionService._emit_terminal_event(updated)
 
         return result, updated
 
@@ -170,6 +199,20 @@ class WorkflowExecutionService:
         )
 
     @staticmethod
+    def _emit_terminal_event(execution: WorkflowExecution) -> None:
+        if execution.status == WorkflowExecutionStatus.AWAITING_REVIEW:
+            WorkflowEvents.approval_required(
+                thread_id=execution.thread_id,
+                message="Workflow paused for human approval",
+            )
+            return
+
+        WorkflowEvents.workflow_completed(
+            thread_id=execution.thread_id,
+            status=execution.status,
+        )
+
+    @staticmethod
     def to_response(
         execution: Optional[WorkflowExecution],
     ) -> Optional[WorkflowExecutionResponse]:
@@ -196,8 +239,14 @@ class WorkflowExecutionService:
         anomaly_detected = bool(result.get("anomaly_detected"))
         validation_passed = result.get("validation_passed", True)
         human_approved = bool(result.get("human_approved"))
+        human_review_completed = bool(result.get("human_review_completed"))
 
-        if supports_human_review and anomaly_detected and not human_approved:
+        if supports_human_review and anomaly_detected:
+            if human_review_completed:
+                if human_approved:
+                    return WorkflowExecutionStatus.COMPLETED, True
+                return WorkflowExecutionStatus.FAILED, False
+
             return WorkflowExecutionStatus.AWAITING_REVIEW, True
 
         if validation_passed is False:

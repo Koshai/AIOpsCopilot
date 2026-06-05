@@ -69,7 +69,10 @@ Rules:
 - If multiple resumes appear in the context, extract ONLY the one that matches the task.
 - Never merge fields from different candidates.
 - skills must be a list of individual skill strings.
+- Always populate education when an Education section or degree lines exist in the resume.
+- Format education as a concise string (for example: "MS, Software Engineering, 2012, Stevens Institute of Technology").
 - Use null only when a field is truly missing for that resume.
+- Never return the literal string "null"; omit the field or use JSON null instead.
 
 Return valid structured data only.
 """,

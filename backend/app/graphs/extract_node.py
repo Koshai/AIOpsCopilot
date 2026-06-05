@@ -7,8 +7,9 @@ from app.websocket.events import WorkflowEvents
 def extract_node(state: WorkflowState):
     workflow_type = state.get("workflow_type", DEFAULT_WORKFLOW_TYPE)
 
-    WorkflowEvents.emit_from_sync(
-        f"Extraction agent extracting {workflow_type} data..."
+    WorkflowEvents.node_started(
+        "extract",
+        f"Extraction agent extracting {workflow_type} data...",
     )
 
     extraction = ExtractionService.extract(
@@ -16,6 +17,8 @@ def extract_node(state: WorkflowState):
         question=state["question"],
         workflow_type=workflow_type,
     )
+
+    WorkflowEvents.node_completed("extract", "Extraction finished")
 
     return {
         "extraction": extraction,

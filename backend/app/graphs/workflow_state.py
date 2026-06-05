@@ -21,6 +21,8 @@ class WorkflowState(TypedDict):
 
     validation_passed: bool
 
+    missing_fields: NotRequired[list[str]]
+
     retry_count: int
 
     anomaly_detected: bool
@@ -28,5 +30,7 @@ class WorkflowState(TypedDict):
     verifier_passed: bool
 
     human_approved: bool
+
+    human_review_completed: NotRequired[bool]
 
     requires_human_review: bool

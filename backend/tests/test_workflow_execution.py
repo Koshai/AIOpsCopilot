@@ -33,12 +33,27 @@ def test_derive_status_awaiting_review():
     assert requires_review is True
 
 
+def test_derive_status_rejected_after_review():
+    status, requires_review = WorkflowExecutionService._derive_status(
+        {
+            "validation_passed": True,
+            "anomaly_detected": True,
+            "human_approved": False,
+            "human_review_completed": True,
+        },
+        supports_human_review=True,
+    )
+    assert status == WorkflowExecutionStatus.FAILED
+    assert requires_review is False
+
+
 def test_derive_status_completed_after_review():
     status, requires_review = WorkflowExecutionService._derive_status(
         {
             "validation_passed": True,
             "anomaly_detected": True,
             "human_approved": True,
+            "human_review_completed": True,
         },
         supports_human_review=True,
     )

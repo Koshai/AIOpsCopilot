@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy.orm import Session
 
 from app.retrieval.vector_search import (
@@ -14,14 +16,16 @@ class HybridSearchService:
     @staticmethod
     def hybrid_search(
         db: Session,
-        query: str
+        query: str,
+        document_id: Optional[int] = None,
     ):
 
         semantic_results = (
             VectorSearchService.search_similar_chunks(
                 db=db,
                 query=query,
-                limit=5
+                limit=5,
+                document_id=document_id,
             )
         )
 
@@ -29,7 +33,8 @@ class HybridSearchService:
             BM25SearchService.keyword_search(
                 db=db,
                 query=query,
-                limit=5
+                limit=5,
+                document_id=document_id,
             )
         )
 

@@ -23,6 +23,8 @@ class Settings(BaseSettings):
 
     LANGCHAIN_PROJECT: str = ""
 
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:3001"
+
     model_config = SettingsConfigDict(
         env_file=os.getenv("ENV_FILE", ".env.local"),
         extra="ignore",

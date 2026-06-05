@@ -1,3 +1,5 @@
+from typing import Optional
+
 from rank_bm25 import BM25Okapi
 
 from sqlalchemy.orm import Session
@@ -11,10 +13,18 @@ class BM25SearchService:
     def keyword_search(
         db: Session,
         query: str,
-        limit: int = 5
+        limit: int = 5,
+        document_id: Optional[int] = None,
     ):
 
-        embeddings = db.query(Embedding).all()
+        query_builder = db.query(Embedding)
+
+        if document_id is not None:
+            query_builder = query_builder.filter(
+                Embedding.document_id == document_id
+            )
+
+        embeddings = query_builder.all()
 
         documents = [
             embedding.chunk_text

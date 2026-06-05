@@ -21,4 +21,12 @@ WORKFLOW_DEFINITION_SEEDS = [
         "schema_name": "resume",
         "enabled": True,
     },
+    {
+        "workflow_type": "contract",
+        "display_name": "Contract Review",
+        "description": "Extract contract metadata and clauses.",
+        "icon": "file-text",
+        "schema_name": "contract",
+        "enabled": True,
+    },
 ]

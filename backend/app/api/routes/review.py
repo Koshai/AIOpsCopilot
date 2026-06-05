@@ -38,3 +38,20 @@ async def approve_review(
     )
 
     return WorkflowExecutionService.attach_to_result(result, execution)
+
+
+@router.post("/review/{thread_id}/reject")
+async def reject_review(
+    thread_id: str,
+    db: Session = Depends(get_db),
+):
+    graph = build_multi_agent_workflow_graph(None)
+
+    result, execution = WorkflowExecutionService.resume_tracked(
+        db,
+        graph=graph,
+        thread_id=thread_id,
+        resume_command=Command(resume=False),
+    )
+
+    return WorkflowExecutionService.attach_to_result(result, execution)

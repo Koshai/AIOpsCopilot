@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -9,12 +11,17 @@ class VectorSearchService:
     def search_similar_chunks(
         db: Session,
         query: str,
-        limit: int = 5
+        limit: int = 5,
+        document_id: Optional[int] = None,
     ):
 
         query_embedding = EmbeddingService.embed_text(query)
 
-        sql = text("""
+        document_filter = (
+            "WHERE document_id = :document_id" if document_id is not None else ""
+        )
+
+        sql = text(f"""
             SELECT
                 id,
                 document_id,
@@ -22,16 +29,19 @@ class VectorSearchService:
                 embedding <-> CAST(:embedding AS vector)
                     AS distance
             FROM embeddings
+            {document_filter}
             ORDER BY distance
             LIMIT :limit
         """)
 
-        result = db.execute(
-            sql,
-            {
-                "embedding": str(query_embedding),
-                "limit": limit
-            }
-        )
+        params = {
+            "embedding": str(query_embedding),
+            "limit": limit,
+        }
+
+        if document_id is not None:
+            params["document_id"] = document_id
+
+        result = db.execute(sql, params)
 
         return result.fetchall()
